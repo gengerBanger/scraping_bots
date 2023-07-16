@@ -20,6 +20,7 @@ coins = {}
 def save_csv(path, items):
     with open(path, 'w',encoding='utf-8', newline='') as file:
         writer = csv.writer(file, delimiter=';')
+        writer.writerow(['coin', 'price', 'changes per hour', 'changes per day', 'changes per week','market capitalization'])
         for coin in coins:
             writer.writerow([coin, coins[coin]['price'], coins[coin]['changes per hour'],
                              coins[coin]['changes per day'], coins[coin]['changes per week'],
@@ -57,7 +58,7 @@ for card in cards:
 
             week = calculating_the_sign(changes[6])
 
-            market_capitalization = changes[7].find_all('span')[0].text
+            market_capitalization = changes[7].find('span').text
 
         except IndexError:
             h_1 = ''
