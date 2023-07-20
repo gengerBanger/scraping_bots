@@ -1,24 +1,40 @@
 import csv
-import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+import time
+
+driver = webdriver.Chrome()
 
 URL = 'https://coinmarketcap.com/ru/'
 
 storage = 'result.csv'
 
-HEADERS ={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.79',
-          'accept': '*/*'}
-
-r = requests.get(URL, headers=HEADERS)
-
-soup = BeautifulSoup(r.content, 'html.parser')
-
-cards = soup.find_all('tr')
-
 coins = {}
+def scrolling_save():
+    try:
+        driver.get(url=URL)
+        action = ActionChains(driver)
+        while flag := driver.find_element(By.CLASS_NAME, "sc-428ddaf3-0"):
+            if driver.find_element(By.CLASS_NAME, "sc-428ddaf3-0"):
+                action.move_to_element(flag).perform()
+            time.sleep(1)
+    except Exception:
+        with open("str.html", 'w', encoding="utf-8") as file:
+            file.write(driver.page_source)
+    finally:
+        driver.close()
+        driver.quit()
+        with open('str.html', encoding='utf-8') as file:
+            src = file.read()
+
+    soup = BeautifulSoup(src, 'html.parser')
+
+    return soup.find_all('tr')
 
 def save_csv(path, items):
-    with open(path, 'w',encoding='utf-8', newline='') as file:
+    with open(path, 'w', encoding='utf-8', newline='') as file:
         writer = csv.writer(file, delimiter=';')
         writer.writerow(['coin', 'price', 'changes per hour', 'changes per day', 'changes per week','market capitalization'])
         for coin in coins:
@@ -32,45 +48,31 @@ def calculating_the_sign(time_interval):
     else:
         return '+' + time_interval.text
 
-for card in cards:
+def main():
+    cards = scrolling_save()
 
-    changes = card.find_all('td')
-
-    try:
-
-        title = card.find('p', {'class': 'sc-4984dd93-0 kKpPOn'})# название монеты
-        if not title:
-            title = card.find(class_='crypto-symbol').text
-        else:
-            title = title.text
-
-        prise = card.find(class_='sc-bc83b59-0')# цена монеты
-        if not prise:
-            prise = card.find_all('td')[-2].find('span').text
-        else:
-            prise = prise.text
-
+    for card in cards:
+        changes = card.find_all('td')
         try:
+            title = card.find('p', {'class': 'sc-4984dd93-0 kKpPOn'}).text  # название монеты
 
-            h_1 = calculating_the_sign(changes[4])
+            prise = card.find(class_='sc-bc83b59-0').text # цена монеты
 
-            h_24 = calculating_the_sign(changes[5])
+            h_1 = calculating_the_sign(changes[4]) # изменения за час
 
-            week = calculating_the_sign(changes[6])
+            h_24 = calculating_the_sign(changes[5]) # изменения за день
 
-            market_capitalization = changes[7].find('span').text
+            week = calculating_the_sign(changes[6]) # изменения за неделю
 
-        except IndexError:
-            h_1 = ''
-            h_24 = ''
-            week = ''
-            market_capitalization = ''
+            market_capitalization = changes[7].find('span').text # капитализация
 
-        coins[title] = {'price': prise, 'changes per hour': h_1, 'changes per day': h_24, 'changes per week': week, 'market capitalization': market_capitalization}
-    except AttributeError:
+            coins[title] = {'price': prise, 'changes per hour': h_1, 'changes per day': h_24, 'changes per week': week,
+                            'market capitalization': market_capitalization}
+        except AttributeError:
             continue
-save_csv(storage, coins)
-print(coins)
+    save_csv(storage, coins)
+    print(coins)
 
-
+if __name__ == '__main__':
+    main()
 
