@@ -8,7 +8,7 @@ import time
 driver = webdriver.Chrome()
 
 URL = 'https://coinmarketcap.com/ru/'
-
+#if driver.find_element(By.CLASS_NAME, "sc-428ddaf3-0"):
 storage = 'result.csv'
 
 coins = {}
@@ -17,8 +17,7 @@ def scrolling_save():
         driver.get(url=URL)
         action = ActionChains(driver)
         while flag := driver.find_element(By.CLASS_NAME, "sc-428ddaf3-0"):
-            if driver.find_element(By.CLASS_NAME, "sc-428ddaf3-0"):
-                action.move_to_element(flag).perform()
+            action.move_to_element(flag).perform()
             time.sleep(1)
     except Exception:
         with open("str.html", 'w', encoding="utf-8") as file:
